@@ -6,20 +6,28 @@ default-resources:
 
 set-resources:
     explorer:
-        mem_mb: 256_000
-        slurm_partition: cpu_med # use a valid partition/queue name on your cluster (with enough RAM)
+        mem_mb: 512_000
+        slurm_partition: scicore # use a valid partition/queue name on your cluster (with enough RAM)
+    explorer_raw:
+        mem_mb: 512_000
+        slurm_partition: scicore
     image_write:
         mem_mb: 64_000
-        slurm_partition: cpu_long # use a valid partition/queue name on your cluster (with a large walltime)
+        slurm_partition: scicore # use a valid partition/queue name on your cluster (with a large walltime)
     to_spatialdata:
         mem_mb: 128_000
     patch_segmentation_baysor:
         mem_mb: 128_000
-        slurm_partition: cpu_med # use a valid partition/queue name on your cluster (with at least 2h of walltime)
+        slurm_partition: scicore # use a valid partition/queue name on your cluster (with at least 2h of walltime)
+    patch_segmentation_cellpose:
+        mem_mb: 128_000
+        qos: gpu6hours
+        slurm_partition: rtx4090
     patch_segmentation_comseg:
         mem_mb: 128_000
     patch_segmentation_proseg:
         mem_mb: 256_000
+        threads: 128
     aggregate:
         mem_mb: 64_000
     patchify_transcripts:

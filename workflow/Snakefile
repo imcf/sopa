@@ -1,8 +1,13 @@
 from src import WorkflowPaths, Args, validate_config
+import os
 
 config = validate_config(config) # validate the Snakemake config
 paths = WorkflowPaths(config) # object handling the paths to the files that will be created
 args = Args(paths, config) # object handling the arguments passed to the workflow
+# Name of the conda environment to use for rules (can be overridden in config)
+# CONDA_ENV = config.get("conda_name", "sopa")
+CONDA_ENV = os.environ.get("SOPA_CONDA_ENV", config.get("conda_name", "sopa"))
+print(f"[Sopa] Using conda environment: {CONDA_ENV}")
 
 ### Segmentation rules
 include: "rules/utils.smk"
@@ -13,11 +18,25 @@ include: "rules/proseg.smk"
 include: "rules/stardist.smk"
 
 localrules: all
+### Per-method explorer targets: create separate explorer outputs when
+### requested (e.g. `.cellpose.explorer` and `.proseg.explorer`). This
+### allows a single Snakemake run to produce two explorer snapshots.
+explorer_cellpose = paths.sdata_path.with_suffix(".cellpose.explorer") / "experiment.xenium"
+explorer_proseg = paths.sdata_path.with_suffix(".proseg.explorer") / "experiment.xenium"
+
+# Compute final explorer targets depending on requested segmentation methods
+explorer_targets = []
+if args.use("cellpose"):
+    explorer_targets.append(explorer_cellpose)
+if args.use("proseg"):
+    explorer_targets.append(explorer_proseg)
+if not explorer_targets:
+    explorer_targets.append(paths.explorer_experiment)
 
 rule all:
     input:
         paths.annotations if args.annotate else [],
-        paths.explorer_experiment,
+        *explorer_targets,
         paths.smk_explorer_raw,
         paths.report,
     params:
@@ -40,7 +59,7 @@ rule to_spatialdata:
     output:
         paths.sdata_zgroup if paths.data_path else [],
     conda:
-        "sopa"
+        CONDA_ENV
     params:
         reader = args['read'].as_cli(),
         data_path = paths.data_path,
@@ -56,7 +75,7 @@ rule tissue_segmentation:
     output:
         touch(paths.segmentation_done("tissue")),
     conda:
-        "sopa"
+        CONDA_ENV
     params:
         tissue_segmentation = args["segmentation"]["tissue"].as_cli(),
         sdata_path = paths.sdata_path,
@@ -76,7 +95,7 @@ checkpoint patchify_image:
         patchify_image = args["patchify"].as_cli(contains="pixel"),
         sdata_path = paths.sdata_path,
     conda:
-        "sopa"
+        CONDA_ENV
     shell:
         """
         sopa patchify image {params.sdata_path} {params.patchify_image}
@@ -94,7 +113,7 @@ checkpoint patchify_transcripts:
         patchify_transcripts = args.patchify_transcripts(),
         sdata_path = paths.sdata_path,
     conda:
-        "sopa"
+        CONDA_ENV
     shell:
         """
         sopa patchify transcripts {params.sdata_path} {params.patchify_transcripts}
@@ -106,7 +125,7 @@ rule aggregate:
     output:
         touch(paths.smk_aggregation),
     conda:
-        "sopa"
+        CONDA_ENV
     params:
         aggregate = args["aggregate"].as_cli(),
         sdata_path = paths.sdata_path,
@@ -121,7 +140,7 @@ rule annotate:
     output:
         directory(paths.annotations),
     conda:
-        "sopa"
+        CONDA_ENV
     resources:
         partition="gpgpuq" if args['annotation']['method'] == "tangram" else "shortq",
         gpu="a100:1" if args['annotation']['method'] == "tangram" else 0,
@@ -145,7 +164,7 @@ rule scanpy_preprocess:
         sdata_path = paths.sdata_path,
         scanpy_preprocess = args["scanpy_preprocess"].as_cli(),
     conda:
-        "sopa"
+        CONDA_ENV
     shell:
         """
         sopa scanpy-preprocess {params.sdata_path} {params.scanpy_preprocess}
@@ -157,7 +176,7 @@ rule explorer_raw:
     output:
         touch(paths.smk_explorer_raw),
     conda:
-        "sopa"
+        CONDA_ENV
     params:
         explorer = args["explorer"].as_cli(keys=['lazy', 'ram_threshold_gb', 'pixel_size', 'pixelsize']),
         sdata_path = paths.sdata_path,
@@ -165,6 +184,48 @@ rule explorer_raw:
     shell:
         """
         sopa explorer write {params.sdata_path} --output-path {params.explorer_directory} {params.explorer} --mode "+it" --no-save-h5ad
+        """
+
+
+rule explorer_cellpose:
+    input:
+        args.segmentation_boundaries(),
+        paths.smk_aggregation,
+        paths.segmentation_done("cellpose"),
+        paths.smk_explorer_raw,
+        paths.annotations if args.annotate else [],
+    output:
+        explorer_cellpose,
+    conda:
+        CONDA_ENV
+    params:
+        explorer = args["explorer"].as_cli(),
+        sdata_path = paths.sdata_path,
+        explorer_directory = str(paths.sdata_path) + ".cellpose.explorer",
+    shell:
+        """
+        sopa explorer write {params.sdata_path} --output-path {params.explorer_directory} {params.explorer} --mode "-it"
+        """
+
+
+rule explorer_proseg:
+    input:
+        args.segmentation_boundaries(),
+        paths.smk_aggregation,
+        paths.segmentation_done("proseg"),
+        paths.smk_explorer_raw,
+        paths.annotations if args.annotate else [],
+    output:
+        explorer_proseg,
+    conda:
+        CONDA_ENV
+    params:
+        explorer = args["explorer"].as_cli(),
+        sdata_path = paths.sdata_path,
+        explorer_directory = str(paths.sdata_path) + ".proseg.explorer",
+    shell:
+        """
+        sopa explorer write {params.sdata_path} --output-path {params.explorer_directory} {params.explorer} --mode "-it"
         """
 
 rule explorer:
@@ -176,7 +237,7 @@ rule explorer:
     output:
         paths.explorer_experiment,
     conda:
-        "sopa"
+        CONDA_ENV
     params:
         explorer = args["explorer"].as_cli(),
         sdata_path = paths.sdata_path,
@@ -198,7 +259,7 @@ rule report:
         sdata_path = paths.sdata_path,
         report = paths.report,
     conda:
-        "sopa"
+        CONDA_ENV
     shell:
         """
         sopa report {params.sdata_path} {params.report}

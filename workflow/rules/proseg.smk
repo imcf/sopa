@@ -7,7 +7,8 @@ rule patch_segmentation_proseg:
         touch(paths.segmentation_done("proseg")),
         touch(paths.smk_table),
     conda:
-        "sopa"
+        CONDA_ENV
+    threads: 128
     params:
         proseg_config = args["segmentation"]["proseg"].as_cli(exclude=[] if config["read"]["technology"] == "visium_hd" else ["prior_shapes_key"]),
         sdata_path = paths.sdata_path,

@@ -5,11 +5,15 @@ cluster:
     --mem={resources.mem_mb}
     --job-name=smk-{rule}
     --gres=gpu:{resources.gpu}
+    --qos=1day
+    --mail-type=END,FAIL,TIME_LIMIT,RUN
+    --mail-user=laurent.guerard@unibas.ch
     --output=logs/%j" # you can update where the logs will be saved (absolute path, or relative to /.../sopa/workflow)
 default-resources:
-  - partition=shortq
-  - mem_mb=8000
-  - gpu=0
+  - partition=scicore # Change this to the category you're using
+  - mem_mb=512000 # Change this to the total amount of RAM you have
+  - gpu=0 # If you have GPU, put this to 1
+#  - qos=1day
 restart-times: 0
 max-jobs-per-second: 100
 max-status-checks-per-second: 1
@@ -21,3 +25,4 @@ rerun-incomplete: True
 printshellcmds: True
 scheduler: greedy
 use-conda: True
+conda_name: "sopa_env"
