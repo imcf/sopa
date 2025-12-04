@@ -23,6 +23,7 @@ set-resources:
         mem_mb: 128_000
         qos: gpu6hours
         slurm_partition: rtx4090
+        gpu: 1
     patch_segmentation_comseg:
         mem_mb: 128_000
     patch_segmentation_proseg:

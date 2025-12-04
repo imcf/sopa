@@ -17,6 +17,7 @@ segmentation:
     flow_threshold: 0.95
     cellprob_threshold: -5.5
     min_area: 500
+    gpu: true
 
   proseg:
     # Use Cellpose boundaries as a prior for Proseg so Proseg runs after
