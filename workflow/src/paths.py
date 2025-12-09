@@ -29,6 +29,8 @@ class WorkflowPaths:
 
         self.smk_patches = self.sopa_cache / "patches"
         self.smk_aggregation = self.sopa_cache / "aggregation"
+        self.smk_aggregation_cellpose = self.sopa_cache / "aggregation_cellpose"
+        self.smk_aggregation_proseg = self.sopa_cache / "aggregation_proseg"
         self.smk_table = self.sopa_cache / "table"
         self.smk_explorer_raw = self.sopa_cache / "explorer_raw"
 

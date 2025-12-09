@@ -143,6 +143,10 @@ def aggregate(
     method_name: str = typer.Option(
         None, help="If segmentation was performed with a generic method, this is the name of the method used."
     ),
+    key_added: str = typer.Option(
+        None,
+        help="Optional key to save the table into `sdata.tables`. If None, defaults to `'{shapes_key}_table'` when shapes_key is provided, else 'table'.",
+    ),
 ):
     """Create an `anndata` table containing the transcript count and/or the channel intensities per cell"""
     import sopa
@@ -164,6 +168,7 @@ def aggregate(
         min_transcripts=min_transcripts,
         expand_radius_ratio=expand_radius_ratio,
         min_intensity_ratio=min_intensity_ratio,
+        key_added=key_added,
     )
 
 
