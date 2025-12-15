@@ -18,6 +18,7 @@ segmentation:
     cellprob_threshold: -5.5
     min_area: 500
     gpu: true
+    model_type: nuclei
 
   proseg:
     # Use Cellpose boundaries as a prior for Proseg so Proseg runs after
