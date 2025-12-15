@@ -25,4 +25,3 @@ rerun-incomplete: True
 printshellcmds: True
 scheduler: greedy
 use-conda: True
-conda_name: "sopa_env"
