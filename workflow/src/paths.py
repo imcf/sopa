@@ -77,3 +77,16 @@ class WorkflowPaths:
             COMSEG_FILES = ["segmentation_polygons.json", "segmentation_counts.h5ad"]
             return [self.smk_transcripts_temp_dir / str(i) / file for i in indices for file in COMSEG_FILES]
         raise ValueError(f"Unknown method name {method_name}")
+
+    def explorer_dir(self, method_name: str | None = None) -> Path:
+        """Return the explorer directory for a given method.
+
+        If method_name is None, returns the default explorer directory `path.explorer_directory`.
+        For methods (e.g. cellpose/proseg), append `.<method>.explorer` to the sdata_path.
+        """
+        if method_name is None:
+            return self.explorer_directory
+        return Path(str(self.sdata_path) + f".{method_name}.explorer")
+
+    def explorer_experiment_for_method(self, method_name: str | None = None) -> Path:
+        return self.explorer_dir(method_name) / "experiment.xenium"

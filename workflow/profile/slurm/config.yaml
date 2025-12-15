@@ -8,6 +8,12 @@ set-resources:
     explorer:
         mem_mb: 512_000
         slurm_partition: scicore # use a valid partition/queue name on your cluster (with enough RAM)
+    explorer_cellpose:
+        mem_mb: 512_000
+        slurm_partition: scicore
+    explorer_proseg:
+        mem_mb: 512_000
+        slurm_partition: scicore
     explorer_raw:
         mem_mb: 512_000
         slurm_partition: scicore

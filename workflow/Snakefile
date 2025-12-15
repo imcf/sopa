@@ -20,10 +20,10 @@ include: "rules/stardist.smk"
 
 localrules: all
 ### Per-method explorer targets: create separate explorer outputs when
-### requested (e.g. `.cellpose.explorer` and `.proseg.explorer`). This
+### requested (e.g. `.zarr.cellpose.explorer` and `.zarr.proseg.explorer`). This
 ### allows a single Snakemake run to produce two explorer snapshots.
-explorer_cellpose = paths.sdata_path.with_suffix(".cellpose.explorer") / "experiment.xenium"
-explorer_proseg = paths.sdata_path.with_suffix(".proseg.explorer") / "experiment.xenium"
+explorer_cellpose = paths.explorer_experiment_for_method("cellpose")
+explorer_proseg = paths.explorer_experiment_for_method("proseg")
 
 # Compute final explorer targets depending on requested segmentation methods
 explorer_targets = []
@@ -218,7 +218,7 @@ rule explorer_raw:
         explorer_directory = paths.explorer_directory,
     shell:
         """
-        sopa explorer write {params.sdata_path} --output-path {params.explorer_directory} {params.explorer} --mode "+it" --no-save-h5ad
+        sopa explorer write {params.sdata_path} --output-path {params.explorer_directory} {params.explorer} --no-save-h5ad
         """
 
 
@@ -242,10 +242,10 @@ rule explorer_cellpose:
             + ("" if "--table-key" in args["explorer"].as_cli() else " --table-key cellpose_table")
         ),
         sdata_path = paths.sdata_path,
-        explorer_directory = str(paths.sdata_path) + ".cellpose.explorer",
+        explorer_directory = paths.explorer_dir("cellpose"),
     shell:
         """
-        sopa explorer write {params.sdata_path} --output-path {params.explorer_directory} {params.explorer} --mode "+it"
+        sopa explorer write {params.sdata_path} --output-path {params.explorer_directory} {params.explorer}
         """
 
 
@@ -269,10 +269,10 @@ rule explorer_proseg:
             + ("" if "--table-key" in args["explorer"].as_cli() else " --table-key proseg_table")
         ),
         sdata_path = paths.sdata_path,
-        explorer_directory = str(paths.sdata_path) + ".proseg.explorer",
+        explorer_directory = paths.explorer_dir("proseg"),
     shell:
         """
-        sopa explorer write {params.sdata_path} --output-path {params.explorer_directory} {params.explorer} --mode "+it"
+        sopa explorer write {params.sdata_path} --output-path {params.explorer_directory} {params.explorer}
         """
 
 rule explorer:
@@ -291,7 +291,7 @@ rule explorer:
         explorer_directory = paths.explorer_directory,
     shell:
         """
-        sopa explorer write {params.sdata_path} --output-path {params.explorer_directory} {params.explorer} --mode "-it"
+        sopa explorer write {params.sdata_path} --output-path {params.explorer_directory} {params.explorer}
         """
 
 rule report:
